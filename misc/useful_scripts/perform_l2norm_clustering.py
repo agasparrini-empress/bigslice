@@ -77,7 +77,7 @@ def fetch_bgc_metadata(result_folder):
             "len_nt": length_nts
         }, index = bgc_ids)
         for taxon_title, taxa_names in taxonomy_info:
-            bgc_metadata["taxon-" + taxon_title] = taxa_names.values
+            bgc_metadata["taxon-" + taxon_title] = taxa_names[0]
         for class_title in sorted(class_titles):
             bgc_metadata["class-" + class_title] = class_presences[class_title].values
 
@@ -166,14 +166,17 @@ def main():
     print("extracting bgc metadata...")
     bgc_metadata = fetch_bgc_metadata(bigslice_result_folder).loc[bgc_features.index]
 
+    bgc_features.index = bgc_metadata['bgc']
+    
     print("calculating GCF features...")
     gcf_models = fetch_gcf_models(
-    	normalize(bgc_features[bgc_metadata["contig_edge"] == 0], norm="l2")[
-    		np.argsort(bgc_features[bgc_metadata["contig_edge"] == 0].sum(axis=1))
-    	], threshold
+        normalize(bgc_features[(bgc_metadata["contig_edge"] == 0).values], norm="l2")[
+            np.argsort(bgc_features[(bgc_metadata["contig_edge"] == 0).values].sum(axis=1))
+        ], threshold
     )
     gcf_models = pd.DataFrame(gcf_models, columns=bgc_features.columns)
-
+    
+    
     print ("saving to file...")
     gcf_models.to_csv(output_gcf_features_tsv_path, sep="\t")
 
